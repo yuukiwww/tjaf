@@ -1,5 +1,5 @@
-import pathlib
-import re
+from pathlib import Path
+from re import match
 
 class ValueWrapper():
     def __init__(self, value):
@@ -11,7 +11,7 @@ class ValueWrapper():
 
     def as_file_ext(self):
         path_str = self.as_str()
-        path = pathlib.Path(path_str)
+        path = Path(path_str)
         return path.suffix.split(".",1)[1]
 
     def as_simple_str(self):
@@ -40,7 +40,7 @@ class Tja():
 
         current_level = 3
         for line in self.text.splitlines():
-            if re.match("^[a-zA-Z0-9]+:",line):
+            if match("^[a-zA-Z0-9]+:",line):
                 key,value = line.split(":",1)
                 if key not in ["COURSE","LEVEL","BALLOON","BALLOONNOR","BALLOONEXP","BALLOONMAS","SCOREINIT","SCOREDIFF","EXAM2"]:
                     header = (key,ValueWrapper(value))
