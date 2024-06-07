@@ -7,8 +7,6 @@ class ValueWrapper():
 
     def as_str(self):
         s = str(self.value)
-        if len(s) > 1000:
-            raise ValueError("文字列が大きすぎます！")
         return s
 
     def as_file_ext(self):
