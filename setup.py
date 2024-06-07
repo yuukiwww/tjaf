@@ -1,9 +1,9 @@
-import setuptools
+from setuptools import setup, find_packages
 
-setuptools.setup(
+setup(
     name="tjaf",
     version="1.0.7",
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     install_requires=[],
     author="Yuuki",
     author_email="0xv75b42326631e@au.com",
