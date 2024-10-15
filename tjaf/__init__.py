@@ -42,7 +42,8 @@ class Tja():
         for line in self.text.splitlines():
             if match("^[a-zA-Z0-9]+:",line):
                 key,value = line.split(":",1)
-                if key not in ["COURSE","LEVEL","BALLOON","BALLOONNOR","BALLOONEXP","BALLOONMAS","SCOREINIT","SCOREDIFF","EXAM2"]:
+                # 参考: https://gist.github.com/KatieFrogs/e000f406bbc70a12f3c34a07303eec8b
+                if key not in ["COURSE","LEVEL","BALLOON","BALLOONNOR","BALLOONEXP","BALLOONMAS","SCOREINIT","SCOREDIFF","EXAM1","EXAM2","EXAM3","STYLE","GAUGEINCR","TOTAL","HIDDENBRANCH"]:
                     header = (key,ValueWrapper(value))
                     self.common_headers.update([header])
                 else:
