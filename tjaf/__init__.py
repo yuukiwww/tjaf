@@ -72,6 +72,8 @@ class Tja():
             subtitle = self.common_headers["SUBTITLE"].as_str()
             if subtitle.startswith("--"):
                 subtitle = subtitle.split("--",1)[1]
+            elif subtitle.startswith("++"):
+                subtitle = subtitle.split("++",1)[1]
         level_names = ["easy","normal","hard","oni","ura"]
         preview = None
         if "DEMOSTART" in self.common_headers:
