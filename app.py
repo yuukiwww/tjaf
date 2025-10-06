@@ -8,7 +8,7 @@ from time import time_ns
 from traceback import TracebackException
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Response, Request, status, UploadFile
+from fastapi import FastAPI, Response, Request, status, UploadFile, Form
 from fastapi.templating import Jinja2Templates
 from pymongo import MongoClient
 from fastapi.responses import PlainTextResponse, FileResponse, JSONResponse
@@ -80,7 +80,7 @@ async def cors_handler(req: Request, call_next: Callable[[Request], Awaitable[Re
     return res
 
 @app.post("/api/upload")
-async def upload_file(file_tja: UploadFile, file_music: UploadFile):
+async def upload_file(file_tja: UploadFile, file_music: UploadFile, maker: str = Form(), maker_url: str = Form()):
     try:
         # ファイルが存在しない場合
         if not file_tja.filename or not file_music.filename:
@@ -110,13 +110,33 @@ async def upload_file(file_tja: UploadFile, file_music: UploadFile):
         music_hash = msg2.hexdigest()
         print("音楽:", music_hash)
 
+        # 曲ID生成
         generated_id = f"{tja_hash}-{music_hash}"
 
+        # メーカーの前処理
+        maker_id = 0
+
+        # メーカーID作成
+        if maker or maker_url:
+            maker_id += 1 + ctx["mongo_client"].taiko.makers.count_documents({})
+
         # MongoDB用データ作成
-        db_entry = tja.to_mongo(generated_id, time_ns())
+        db_entry = tja.to_mongo(generated_id, time_ns(), maker_id)
         pprint(db_entry)
 
+        # データベースにデータをぶち込む
         ctx["mongo_client"].taiko.songs.insert_one(db_entry)
+
+        if maker_id:
+            # メーカーのデータも作成
+            db_maker_entry = {
+                "id": maker_id,
+                "name": maker,
+                "url": maker_url
+            }
+
+            # メーカーのデータもぶち込む
+            ctx["mongo_client"].taiko.makers.insert_one(db_maker_entry)
 
         # 保存ディレクトリ
         target_dir = ctx["songs_dir"] / generated_id

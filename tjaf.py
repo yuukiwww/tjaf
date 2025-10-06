@@ -65,7 +65,7 @@ class Tja():
     def has_lyrics(self):
         return any(h.split(" ",1)[0] == "#LYRIC" for h in sum(self.humen_list[:5],[]))
 
-    def to_mongo(self, song_id, order):
+    def to_mongo(self, song_id, order, maker_id):
         title = self.common_headers["TITLE"].as_str()
         subtitle = None
         if "SUBTITLE" in self.common_headers:
@@ -114,5 +114,6 @@ class Tja():
             "lyrics": self.has_lyrics(),
             "hash": "",
             "id": song_id,
-            "order": order
+            "order": order,
+            "maker_id": maker_id
         }
