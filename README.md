@@ -1,6 +1,6 @@
 # tjaf
 
-曲を管理します
+太鼓ウェブの曲を管理します
 
 ## デバッグの開始
 
@@ -21,5 +21,5 @@ SONGS_DIR=~/taiko-web/public/songs fastapi dev
 今すぐデプロイ！
 
 - https://tjaf.party/upload/
-- https://tjaf.party/delete/
-- https://tjaf.party/tjagen/
+- https://tjaf.party/delete/ (予定)
+- https://tjaf.party/tjagen/ (予定)

@@ -3,12 +3,18 @@ from pprint import pprint
 from typing import List, Callable, Awaitable
 from urllib.parse import urlparse
 from pathlib import Path
+from hashlib import sha256
+from time import time_ns
+from traceback import TracebackException
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Response, Request, status
+from fastapi import FastAPI, Response, Request, status, UploadFile
 from fastapi.templating import Jinja2Templates
 from pymongo import MongoClient
-from fastapi.responses import PlainTextResponse, FileResponse
+from fastapi.responses import PlainTextResponse, FileResponse, JSONResponse
+from nkf import nkf
+
+from tjaf import Tja
 
 ctx = {}
 
@@ -73,10 +79,64 @@ async def cors_handler(req: Request, call_next: Callable[[Request], Awaitable[Re
 
     return res
 
+@app.post("/api/upload")
+async def upload_file(file_tja: UploadFile, file_music: UploadFile):
+    try:
+        # ファイルが存在しない場合
+        if not file_tja.filename or not file_music.filename:
+            return JSONResponse({"error":"ファイルが選択されていません"})
+
+        # TJAファイル読み込み
+        tja_raw = await file_tja.read()
+        tja_data = nkf('-wd', tja_raw)
+        tja_text = tja_data.decode("utf-8")
+        print("TJAのサイズ:", len(tja_text))
+
+        # TJA解析
+        tja = Tja(tja_text)
+
+        # ハッシュ生成
+        msg1 = sha256()
+        msg1.update(tja_data)
+        tja_hash = msg1.hexdigest()
+        print("TJA:", tja_hash)
+
+        # 音楽ファイル解析
+        music_data = await file_music.read()
+
+        # 音楽ファイルもハッシュ生成
+        msg2 = sha256()
+        msg2.update(music_data)
+        music_hash = msg2.hexdigest()
+        print("音楽:", music_hash)
+
+        generated_id = f"{tja_hash}-{music_hash}"
+
+        # MongoDB用データ作成
+        db_entry = tja.to_mongo(generated_id, time_ns())
+        pprint(db_entry)
+
+        ctx["mongo_client"].taiko.songs.insert_one(db_entry)
+
+        # 保存ディレクトリ
+        target_dir = ctx["songs_dir"] / generated_id
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        # ファイル保存
+        (target_dir / "main.tja").write_bytes(tja_data)
+        (target_dir / f"main.{db_entry['music_type']}").write_bytes(music_data)
+
+        return {"success": True, "id": generated_id}
+
+    except Exception as e:
+        error_str = "".join(TracebackException.from_exception(e).format())
+        return JSONResponse({"error": error_str})
+
 @app.get("/upload/")
 async def upload(req: Request):
     res = ctx["templates"].TemplateResponse(req, "upload.html", {
-        "total": ctx["mongo_client"].taiko.songs.count_documents({})
+        "total": ctx["mongo_client"].taiko.songs.count_documents({}),
+        "total_files": sum(1 for x in ctx["songs_dir"].glob("*") if x.is_dir())
     })
     res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
     res.headers["CDN-Cache-Control"] = f"max-age=60"
