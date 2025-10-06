@@ -1,0 +1,4 @@
+fastapi[standard]==0.117.1
+pymongo==4.15.1
+Jinja2==3.1.6
+fastapi-limiter==0.1.6
