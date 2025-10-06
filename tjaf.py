@@ -110,10 +110,9 @@ class Tja():
             "skin_id": None,
             "preview": preview,
             "volume": 1,
-            "maker_id": None,
+            "maker_id": maker_id,
             "lyrics": self.has_lyrics(),
             "hash": "",
             "id": song_id,
-            "order": order,
-            "maker_id": maker_id
+            "order": order
         }
