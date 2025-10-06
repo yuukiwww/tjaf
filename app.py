@@ -156,7 +156,7 @@ async def upload_file(file_tja: UploadFile, file_music: UploadFile, maker: str =
 async def upload(req: Request):
     res = ctx["templates"].TemplateResponse(req, "upload.html", {
         "total": ctx["mongo_client"].taiko.songs.count_documents({}),
-        "total_files": sum(1 for x in ctx["songs_dir"].glob("*") if x.is_dir())
+        "dir": ctx["songs_dir"].absolute()
     })
     res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
     res.headers["CDN-Cache-Control"] = f"max-age=60"
