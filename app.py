@@ -77,7 +77,7 @@ async def cors_handler(req: Request, call_next: Callable[[Request], Awaitable[Re
 async def upload(req: Request):
     res = ctx["templates"].TemplateResponse(req, "upload.html", {
         "total": ctx["mongo_client"].taiko.songs.count_documents({}),
-        "total_bytes": sum(f.stat().st_size for f in ctx["songs_dir"].glob('**/*') if f.is_file())
+        "total_files": len(list(ctx["songs_dir"].rglob("*")))
     })
     res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
     res.headers["CDN-Cache-Control"] = f"max-age=60"
