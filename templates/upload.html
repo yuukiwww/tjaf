@@ -9,8 +9,18 @@
   </head>
   <body>
     <h1>太鼓ウェブあっぷろーだー V2</h1>
-    <p>現在の曲数: {{ total }}</p>
-    <p>曲ディレクトリ: {{ dir }}</p>
+
+    <table>
+      <tr>
+        <td>現在の曲数</td>
+        <td>{{ total }}</td>
+      </tr>
+
+      <tr>
+        <td>曲ディレクトリ</td>
+        <td>{{ dir }}</td>
+      </tr>
+    </table>
 
     <form id="upload-form" enctype="multipart/form-data">
       <label for="file_tja">TJA ファイル:</label>
