@@ -21,6 +21,3 @@ SONGS_DIR=~/taiko-web/public/songs fastapi dev
 今すぐデプロイ！
 
 - https://tjaf.party/
-- https://tjaf.party/upload/
-- https://tjaf.party/delete/ (予定)
-- https://tjaf.party/tjagen/ (予定)
