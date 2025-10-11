@@ -6,6 +6,7 @@ from pathlib import Path
 from hashlib import sha256
 from time import time_ns
 from traceback import TracebackException
+from shutil import rmtree
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Response, Request, status, UploadFile, Form
@@ -13,6 +14,7 @@ from fastapi.templating import Jinja2Templates
 from pymongo import MongoClient
 from fastapi.responses import PlainTextResponse, FileResponse, JSONResponse
 from nkf import nkf
+from pydantic import BaseModel
 
 from tjaf import Tja
 
@@ -37,6 +39,9 @@ async def lifespan(app: FastAPI):
     ctx["mongo_client"].close()
 
     ctx.clear()
+
+class TjafDeleteItem(BaseModel):
+    id: str
 
 def fastapi_serve(dir: str, ref: str, indexes: List[str] = ["index.html", "index.htm"]) -> Response:
     url_path = urlparse(ref or "/").path
@@ -151,6 +156,24 @@ async def upload_file(file_tja: UploadFile, file_music: UploadFile, maker: str =
     except Exception as e:
         error_str = "".join(TracebackException.from_exception(e).format())
         return JSONResponse({"error": error_str})
+
+@app.post("/api/delete")
+async def api_delete(item: TjafDeleteItem) -> Response:
+    # データベースから曲消す
+    ctx["mongo_client"].taiko.songs.delete_one({ "id": item.id })
+
+    # ディレクトリを取得
+    root_dir = ctx["songs_dir"]
+    target_dir = root_dir / item.id
+
+    # 親ディレクトリ自身か全く違う場合は拒否
+    if root_dir.resolve() not in (target_dir.resolve().parents or []):
+        return PlainTextResponse(content="このディレクトリは削除できません", status_code=status.HTTP_403_FORBIDDEN)
+
+    # 削除を実行
+    rmtree(target_dir)
+
+    return "成功しました。"
 
 @app.get("/upload/")
 async def upload(req: Request):
