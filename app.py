@@ -9,16 +9,30 @@ from traceback import TracebackException
 from shutil import rmtree
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Response, Request, status, UploadFile, Form
+from fastapi import FastAPI, Response, Request, status, UploadFile, Form, Depends
 from fastapi.templating import Jinja2Templates
 from pymongo import MongoClient
 from fastapi.responses import PlainTextResponse, FileResponse, JSONResponse
 from nkf import nkf
 from pydantic import BaseModel
+from redis.asyncio import from_url
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 
 from tjaf import Tja
 
 ctx = {}
+
+async def default_identifier(req: Request):
+    cloudflare_ip = req.headers.get("CF-Connecting-IP")
+    if cloudflare_ip:
+        return cloudflare_ip.split(",")[0]
+
+    forwarded = req.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0]
+
+    return req.client.host + ":" + req.scope["path"]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,11 +48,17 @@ async def lifespan(app: FastAPI):
 
     pprint(ctx)
 
+    redis_uri = environ.get("REDIS_URI", "redis://127.0.0.1:6379/")
+    redis_connection = from_url(redis_uri, encoding="utf8")
+    await FastAPILimiter.init(redis_connection, identifier=default_identifier)
+
     yield
 
     ctx["mongo_client"].close()
 
     ctx.clear()
+
+    await FastAPILimiter.close()
 
 class TjafDeleteItem(BaseModel):
     id: str
@@ -157,7 +177,7 @@ async def upload_file(file_tja: UploadFile, file_music: UploadFile, maker: str =
         error_str = "".join(TracebackException.from_exception(e).format())
         return JSONResponse({"error": error_str})
 
-@app.post("/api/delete")
+@app.post("/api/delete", dependencies=[Depends(RateLimiter(times=1, seconds=86400))])
 async def api_delete(item: TjafDeleteItem) -> Response:
     # データベースから曲消す
     ctx["mongo_client"].taiko.songs.delete_one({ "id": item.id })
