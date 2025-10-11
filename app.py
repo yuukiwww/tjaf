@@ -211,3 +211,20 @@ async def static_upload(ref: str = None):
     res.headers["Cache-Control"] = f"public, max-age=3600, s-maxage=3600"
     res.headers["CDN-Cache-Control"] = f"max-age=3600"
     return res
+
+@app.get("/delete/")
+async def delete_home(req: Request, id: str):
+    res = ctx["templates"].TemplateResponse(req, "delete.html", {
+        "title": ctx["mongo_client"].taiko.songs.find_one({ "id": id })["title"],
+        "id": id
+    })
+    res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
+    res.headers["CDN-Cache-Control"] = f"max-age=60"
+    return res
+
+@app.get("/delete/{ref:path}")
+async def static_delete(ref: str = None):
+    res = fastapi_serve("static", ref)
+    res.headers["Cache-Control"] = f"public, max-age=3600, s-maxage=3600"
+    res.headers["CDN-Cache-Control"] = f"max-age=3600"
+    return res

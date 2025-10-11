@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>太鼓ウェブ削除ツール</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="delete.js"></script>
+  </head>
+  <body>
+    <h1>{{ title }} を削除します！</h1>
+
+    <p>本当に削除しますか？</p>
+    <p>この曲に問題がある場合や、公序良俗に反する場合にのみ、実行したほうがいいと思います。</p>
+    <p>本当に曲が削除されます。</p>
+    <p>成功しても反映まで1分ほどかかる場合があります。</p>
+
+    <input type="submit" value="今すぐ削除" onclick="songDelete(this);" data-id="{{ id | urlencode() }}">
+  </body>
+</html>
